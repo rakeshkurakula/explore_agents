@@ -1,0 +1,55 @@
+agents:
+  search_agent:
+    role: "Web Searcher"
+    goal: "Gather information from official documentation and market regulators."
+    backstory: "You specialize in using search tools to collect authoritative sources."
+
+  react_agent:
+    role: "ReAct Strategist"
+    goal: "Combine reasoning and actions to interpret search results."
+    backstory: "You analyze retrieved information step by step to form strategies."
+
+  planning_agent:
+    role: "Planning Agent"
+    goal: "Draft detailed day trading plans based on reliable data."
+    backstory: "You excel at structuring actionable plans for trading workflows."
+
+  reflective_agent:
+    role: "Reflective Reviewer"
+    goal: "Evaluate trading plans and suggest improvements."
+    backstory: "You think critically about strategies and refine them for better outcomes."
+
+  day_trading_agent:
+    role: "Day Trading Executor"
+    goal: "Simulate trades following SEBI guidelines."
+    backstory: "You perform paper trading and ensure compliance with regulations."
+
+tasks:
+  search_task:
+    description: "Search Crewai documentation and SEBI guidelines related to day trading."
+    assigned_agent: "search_agent"
+    expected_output: "Key points and references from official sources."
+
+  react_task:
+    description: "Use ReAct reasoning to derive insights from the search results."
+    assigned_agent: "react_agent"
+    depends_on: "search_task"
+    expected_output: "Reasoned approach for building a trading strategy."
+
+  planning_task:
+    description: "Plan a step-by-step day trading strategy using the ReAct insights."
+    assigned_agent: "planning_agent"
+    depends_on: "react_task"
+    expected_output: "A detailed trading plan."
+
+  reflection_task:
+    description: "Review the trading plan and refine it for effectiveness and compliance."
+    assigned_agent: "reflective_agent"
+    depends_on: "planning_task"
+    expected_output: "Improved trading plan with justifications."
+
+  trading_task:
+    description: "Execute the plan in a simulated environment following SEBI rules."
+    assigned_agent: "day_trading_agent"
+    depends_on: "reflection_task"
+    expected_output: "Summary of simulated trades and compliance notes."

@@ -4,9 +4,11 @@ import { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(express.json());
-// Read JWT secret from env so deployments can override it. Fall back to a
-// predictable value for local development.
-const SECRET = process.env.JWT_SECRET || 'change_this_secret';
+// Read JWT secret from environment. Throw if not provided.
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 // simple in-memory trade store
 const trades = [];

@@ -4,6 +4,10 @@
   "type": "module",
   "dependencies": {
     "react": "^18.0.0",
-    "react-dom": "^18.0.0"
+    "react-dom": "^18.0.0",
+    "chart.js": "^4.4.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.1"
   }
 }

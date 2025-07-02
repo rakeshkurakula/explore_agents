@@ -1,6 +1,6 @@
 # Day-Trading Crew Dashboard
 
-This example shows a minimal dashboard stack for the day-trading crew using an Express backend and React frontend.
+This example shows a minimal dashboard stack for the day-trading crew using an Express backend and React frontend. It now includes an educational component demonstrating options strategies.
 
 ## Architecture
 - **Express API** with JWT authentication and a WebSocket for trade updates.
@@ -27,4 +27,6 @@ The server exposes:
 - `POST /trades` – create a trade (requires auth; JSON body `{symbol, qty, price}`).
 - WebSocket at `ws://localhost:3000` broadcasting trade updates.
 
-Use the `TradeUpdates` React component to display live trades.
+Use the `TradeUpdates` React component to display live trades. The `DerivativesMastery` component visualises options concepts with Chart.js and Tailwind CSS.
+
+**Disclaimer:** All examples are for educational purposes only and do not constitute financial advice.

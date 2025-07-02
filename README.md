@@ -10,6 +10,12 @@ This repository now includes a simple example of building a multi-agent crew for
 - ReAct, planning and reflective agents that analyze the results and develop a strategy.
 - A day trading agent that performs paper trading using the generated plan.
 
+Before running the example, set your Serper API key so the search agent can query the web:
+
+```bash
+export SERPER_API_KEY=your_serper_api_key
+```
+
 Run the crew with:
 
 ```bash
@@ -17,3 +23,5 @@ python run_day_trading_agents.py
 ```
 
 This will execute the tasks sequentially and print the final simulated trading summary.
+
+The example simulates a trading workflow only and is not financial advice.

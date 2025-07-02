@@ -4,7 +4,10 @@ export default function TradeUpdates() {
   const [trades, setTrades] = useState([]);
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3000');
+    const token = localStorage.getItem('token');
+    const url = token ? `ws://localhost:3000?token=${token}` : 'ws://localhost:3000';
+    const protocols = token ? [token] : undefined;
+    const ws = new WebSocket(url, protocols);
     ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
       if (msg.type === 'init') setTrades(msg.data);

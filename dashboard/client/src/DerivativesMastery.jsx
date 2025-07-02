@@ -7,6 +7,7 @@ export default function DerivativesMastery() {
   const riskRef = useRef(null);
   const kpmRef = useRef(null);
   const payoffRef = useRef(null);
+  const improvementRef = useRef(null);
   const [strategy, setStrategy] = useState('bull-call');
   const charts = useRef({});
 
@@ -225,7 +226,22 @@ export default function DerivativesMastery() {
       }
     });
 
-    charts.current = { premiumChart, greeksChart, riskChart, kpmChart, payoffChart };
+    const improvementChart = new Chart(improvementRef.current, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+          label: 'Equity Curve',
+          data: [10000, 10200, 10150, 10500, 10750, 11000],
+          borderColor: palette.gold,
+          tension: 0.2,
+          fill: false
+        }]
+      },
+      options: { ...defaultChartOptions }
+    });
+
+    charts.current = { premiumChart, greeksChart, riskChart, kpmChart, payoffChart, improvementChart };
 
     return () => {
       Object.values(charts.current).forEach(c => c.destroy());
@@ -251,6 +267,11 @@ export default function DerivativesMastery() {
   );
 
   const s = strategies[strategy];
+  const navItems = [
+    { id: 'foundational', label: 'Foundational Instruments' },
+    { id: 'process', label: 'Daily Trading Process' },
+    { id: 'improvement', label: 'Continuous Improvement Loop' }
+  ];
 
   return (
     <div className="text-gray-800 bg-[#FDFBF7] font-inter">
@@ -258,8 +279,15 @@ export default function DerivativesMastery() {
         <h1 className="text-4xl md:text-5xl font-black text-[#2F2F2F] mb-4">The Derivatives Mastery Blueprint</h1>
         <p className="text-lg text-gray-600 max-w-3xl mx-auto">An interactive application designed for educational purposes. This is not financial advice.</p>
       </div>
+      <nav className="flex flex-wrap justify-center gap-4 mb-8 text-sm">
+        {navItems.map(n => (
+          <a key={n.id} href={`#${n.id}`} className="text-blue-600 hover:underline">
+            {n.label}
+          </a>
+        ))}
+      </nav>
 
-      <section className="mb-16">
+        <section className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Decoding Options</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -332,38 +360,51 @@ export default function DerivativesMastery() {
         </div>
       </section>
 
-      <section className="mb-16">
+      <section id="foundational" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Foundational Instruments</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Futures</h3>
-            <p className="text-gray-600 text-sm">Standardized contracts to lock in prices for later delivery. Widely used for hedging and speculation.</p>
+            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <li>Standardized contracts on exchanges</li>
+              <li>Used to hedge price risk</li>
+              <li>Popular with speculators for leverage</li>
+            </ul>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Call Options</h3>
-            <p className="text-gray-600 text-sm">Give the right, but not the obligation, to buy the underlying at a fixed price before expiry.</p>
+            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <li>Right but not obligation to buy</li>
+              <li>Strike price fixed until expiry</li>
+              <li>Great for bullish speculation</li>
+            </ul>
           </div>
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
             <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Put Options</h3>
-            <p className="text-gray-600 text-sm">Provide the right to sell the underlying at a predetermined price, useful for protection and bearish views.</p>
+            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+              <li>Right to sell the underlying</li>
+              <li>Insurance for long portfolios</li>
+              <li>Useful when market outlook is bearish</li>
+            </ul>
           </div>
         </div>
         <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
       </section>
 
-      <section className="mb-16">
+        <section id="process" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Daily Trading Process</h2>
         <ol className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2 list-decimal list-inside text-sm text-gray-600">
-          <li>Pre-market preparation and news review.</li>
-          <li>Identify setups and define risk parameters.</li>
-          <li>Execute trades according to the plan.</li>
-          <li>Manage open positions and adjust stops.</li>
-          <li>Record outcomes and review the day.</li>
+          <li>Pre-market scan of news and market sentiment.</li>
+          <li>Define setups, entry triggers and stop levels.</li>
+          <li>Execute according to the written plan.</li>
+          <li>Monitor positions and adjust risk.</li>
+          <li>Log trades with screenshots and notes.</li>
+          <li>End-of-day review of wins and losses.</li>
         </ol>
         <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
       </section>
 
-      <section className="mb-16">
+        <section id="improvement" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Continuous Improvement Loop</h2>
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
@@ -372,6 +413,9 @@ export default function DerivativesMastery() {
             <li>Identify areas of strength and weakness.</li>
             <li>Refine rules and test incremental changes.</li>
           </ul>
+          <div className="chart-container h-56 mt-4">
+            <canvas ref={improvementRef}></canvas>
+          </div>
           <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
         </div>
       </section>

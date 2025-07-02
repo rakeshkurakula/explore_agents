@@ -250,16 +250,64 @@ export default function DerivativesMastery() {
     </button>
   );
 
+  const sectionsMeta = [
+    { id: 'decoding-options', label: 'Decoding Options' },
+    { id: 'strategy-playbook', label: 'The Strategy Playbook' },
+    { id: 'risk-psychology', label: 'Risk & Psychology' },
+    { id: 'foundational-instruments', label: 'Foundational Instruments' },
+    { id: 'daily-trading-process', label: 'Daily Trading Process' },
+    { id: 'continuous-improvement', label: 'Continuous Improvement Loop' }
+  ];
+
+  const [activeSection, setActiveSection] = useState(sectionsMeta[0].id);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        });
+      },
+      { rootMargin: '0px 0px -60% 0px' }
+    );
+
+    sectionsMeta.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const s = strategies[strategy];
 
   return (
-    <div className="text-gray-800 bg-[#FDFBF7] font-inter">
-      <div className="text-center bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-10">
-        <h1 className="text-4xl md:text-5xl font-black text-[#2F2F2F] mb-4">The Derivatives Mastery Blueprint</h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">An interactive application designed for educational purposes. This is not financial advice.</p>
-      </div>
+    <div className="text-gray-800 bg-[#FDFBF7] font-inter md:flex">
+      <nav className="md:w-1/4 md:pr-8 mb-8 md:mb-0 sticky top-4 self-start">
+        <ul className="flex md:flex-col gap-2 overflow-x-auto">
+          {sectionsMeta.map(({ id, label }) => (
+            <li key={id} className="shrink-0">
+              <a
+                href={`#${id}`}
+                className={`block px-4 py-2 bg-white rounded-lg border-l-4 hover:bg-gray-50 ${
+                  activeSection === id
+                    ? 'border-[#D5A021] font-bold text-[#2F2F2F]'
+                    : 'border-transparent text-gray-600'
+                }`}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="flex-1">
+        <div className="text-center bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-10">
+          <h1 className="text-4xl md:text-5xl font-black text-[#2F2F2F] mb-4">The Derivatives Mastery Blueprint</h1>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">An interactive application designed for educational purposes. This is not financial advice.</p>
+        </div>
 
-      <section className="mb-16">
+      <section id="decoding-options" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Decoding Options</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -278,7 +326,7 @@ export default function DerivativesMastery() {
       </section>
 
 
-      <section className="mb-16">
+      <section id="strategy-playbook" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">The Strategy Playbook</h2>
         <div className="flex flex-col md:flex-row gap-8">
           <div className="w-full md:w-1/3 space-y-2" id="strategy-list">
@@ -309,7 +357,7 @@ export default function DerivativesMastery() {
         </div>
       </section>
 
-      <section className="mb-16">
+      <section id="risk-psychology" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Risk &amp; Psychology</h2>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           <div className="md:col-span-2 bg-red-600 text-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center">
@@ -332,7 +380,7 @@ export default function DerivativesMastery() {
         </div>
       </section>
 
-      <section className="mb-16">
+      <section id="foundational-instruments" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Foundational Instruments</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
@@ -351,7 +399,7 @@ export default function DerivativesMastery() {
         <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
       </section>
 
-      <section className="mb-16">
+      <section id="daily-trading-process" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Daily Trading Process</h2>
         <ol className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2 list-decimal list-inside text-sm text-gray-600">
           <li>Pre-market preparation and news review.</li>
@@ -363,7 +411,7 @@ export default function DerivativesMastery() {
         <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
       </section>
 
-      <section className="mb-16">
+      <section id="continuous-improvement" className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Continuous Improvement Loop</h2>
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
           <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
@@ -376,6 +424,7 @@ export default function DerivativesMastery() {
         </div>
       </section>
 
+      </div>
     </div>
   );
 }

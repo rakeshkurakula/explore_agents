@@ -1,12 +1,14 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 
 const app = express();
 app.use(express.json());
-// Read JWT secret from env so deployments can override it. Fall back to a
-// predictable value for local development.
-const SECRET = process.env.JWT_SECRET || 'change_this_secret';
+// Read JWT secret from environment. Throw if not provided.
+const SECRET = process.env.JWT_SECRET;
+if (!SECRET) {
+  throw new Error('JWT_SECRET environment variable is required');
+}
 
 // simple in-memory trade store
 const trades = [];
@@ -34,7 +36,18 @@ app.get('/trades', authMiddleware, (req, res) => {
 });
 
 app.post('/trades', authMiddleware, (req, res) => {
-  const trade = { ...req.body, user: req.user.username, time: Date.now() };
+  const { symbol, qty, price } = req.body;
+
+  const validSymbol =
+    typeof symbol === 'string' && /^[a-zA-Z0-9._-]+$/.test(symbol);
+  const validQty = typeof qty === 'number' && !Number.isNaN(qty);
+  const validPrice = typeof price === 'number' && !Number.isNaN(price);
+
+  if (!validSymbol || !validQty || !validPrice) {
+    return res.status(400).json({ error: 'invalid trade fields' });
+  }
+
+  const trade = { symbol, qty, price, user: req.user.username, time: Date.now() };
   trades.push(trade);
   broadcast(JSON.stringify({ type: 'trade', data: trade }));
   res.status(201).json(trade);
@@ -46,10 +59,30 @@ const wss = new WebSocketServer({ server });
 
 function broadcast(msg) {
   wss.clients.forEach(client => {
-    if (client.readyState === client.OPEN) client.send(msg);
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(msg);
+    }
   });
 }
 
-wss.on('connection', ws => {
+wss.on('connection', (ws, req) => {
+  let token;
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    token = url.searchParams.get('token');
+
+    if (!token && req.headers['sec-websocket-protocol']) {
+      token = req.headers['sec-websocket-protocol'].split(',')[0].trim();
+    }
+
+    if (!token) throw new Error('missing token');
+
+    const user = jwt.verify(token, SECRET);
+    ws.user = user;
+  } catch (err) {
+    ws.close(1008, 'invalid token');
+    return;
+  }
+
   ws.send(JSON.stringify({ type: 'init', data: trades }));
 });

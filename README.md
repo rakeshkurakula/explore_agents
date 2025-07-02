@@ -28,5 +28,7 @@ The example simulates a trading workflow only and is not financial advice.
 
 ## Dashboard
 
-A small dashboard in the `dashboard` folder demonstrates live trade updates and options concepts using Express and React. See [dashboard/README.md](dashboard/README.md) for setup details. All components are provided for educational purposes only.
+A small dashboard in the `dashboard` folder demonstrates live trade updates and options concepts using Express and React. Styling relies on Tailwind CSS compiled with PostCSS. See [dashboard/README.md](dashboard/README.md) for setup details and the CSS build configuration. All components are provided for educational purposes only.
+
+When creating a trade via the API, send JSON in the form `{"symbol": "TICKER", "qty": 1, "price": 100.5}`. The `symbol` should be a safe string and `qty` and `price` must be numbers.
 

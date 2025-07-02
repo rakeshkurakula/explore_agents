@@ -23,7 +23,20 @@ This example shows a minimal dashboard stack for the day-trading crew using an E
    ```
    The app reads `index.html` at the project root and mounts the exported `TradeUpdates`
    and `DerivativesMastery` components. Build a production bundle with `pnpm run build`.
-   Tailwind CSS is configured in `tailwind.config.js` and included via `src/index.css`.
+   Styling is compiled with PostCSS using Tailwind CSS and Autoprefixer. A sample
+   `postcss.config.js` is provided:
+
+   ```js
+   export default {
+     plugins: {
+       tailwindcss: {},
+       autoprefixer: {},
+     },
+   };
+   ```
+
+   Tailwind directives live in `src/index.css`, which is imported by `src/main.jsx` so
+   the generated CSS is applied.
 
 The server exposes:
 - `POST /auth/login` – returns a JWT token when given `{username}`.

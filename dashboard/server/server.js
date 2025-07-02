@@ -4,7 +4,9 @@ import { WebSocketServer } from 'ws';
 
 const app = express();
 app.use(express.json());
-const SECRET = 'change_this_secret';
+// Read JWT secret from env so deployments can override it. Fall back to a
+// predictable value for local development.
+const SECRET = process.env.JWT_SECRET || 'change_this_secret';
 
 // simple in-memory trade store
 const trades = [];

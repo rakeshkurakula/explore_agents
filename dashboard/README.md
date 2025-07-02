@@ -12,6 +12,7 @@ This example shows a minimal dashboard stack for the day-trading crew using an E
    ```bash
    cd dashboard/server
    pnpm install
+   export JWT_SECRET=your_secret # set before starting the API
    node server.js
    ```
 3. In another terminal, run the React client using Vite:

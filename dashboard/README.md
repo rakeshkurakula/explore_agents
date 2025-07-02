@@ -7,12 +7,16 @@ This example shows a minimal dashboard stack for the day-trading crew using an E
 - **React** component that connects to the WebSocket and lists trades live.
 
 ## Getting Started
+The API requires a `JWT_SECRET` environment variable. Copy `server/.env.example`
+to `server/.env` and adjust the value before running the server.
 1. Install Node 18 or later and pnpm.
 2. Install server dependencies:
    ```bash
    cd dashboard/server
    pnpm install
-   export JWT_SECRET=your_secret # set before starting the API
+   # Set the JWT secret (required for signing tokens)
+   cp .env.example .env && \
+   export $(grep JWT_SECRET .env)
    node server.js
    ```
 3. In another terminal, run the React client using Vite:

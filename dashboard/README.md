@@ -14,12 +14,15 @@ This example shows a minimal dashboard stack for the day-trading crew using an E
    pnpm install
    node server.js
    ```
-3. In another terminal, install client deps and run a bundler of your choice:
+3. In another terminal, run the React client using Vite:
    ```bash
    cd ../client
    pnpm install
-   # integrate with your React setup (e.g., Vite)
+   pnpm run dev
    ```
+   The app reads `index.html` at the project root and mounts the exported `TradeUpdates`
+   and `DerivativesMastery` components. Build a production bundle with `pnpm run build`.
+   Tailwind CSS is configured in `tailwind.config.js` and included via `src/index.css`.
 
 The server exposes:
 - `POST /auth/login` – returns a JWT token when given `{username}`.

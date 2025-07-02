@@ -1,6 +1,6 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import { WebSocketServer } from 'ws';
+import { WebSocketServer, WebSocket } from 'ws';
 
 const app = express();
 app.use(express.json());
@@ -48,10 +48,30 @@ const wss = new WebSocketServer({ server });
 
 function broadcast(msg) {
   wss.clients.forEach(client => {
-    if (client.readyState === client.OPEN) client.send(msg);
+    if (client.readyState === WebSocket.OPEN) {
+      client.send(msg);
+    }
   });
 }
 
-wss.on('connection', ws => {
+wss.on('connection', (ws, req) => {
+  let token;
+  try {
+    const url = new URL(req.url, 'http://localhost');
+    token = url.searchParams.get('token');
+
+    if (!token && req.headers['sec-websocket-protocol']) {
+      token = req.headers['sec-websocket-protocol'].split(',')[0].trim();
+    }
+
+    if (!token) throw new Error('missing token');
+
+    const user = jwt.verify(token, SECRET);
+    ws.user = user;
+  } catch (err) {
+    ws.close(1008, 'invalid token');
+    return;
+  }
+
   ws.send(JSON.stringify({ type: 'init', data: trades }));
 });

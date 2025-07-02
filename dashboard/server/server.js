@@ -34,7 +34,18 @@ app.get('/trades', authMiddleware, (req, res) => {
 });
 
 app.post('/trades', authMiddleware, (req, res) => {
-  const trade = { ...req.body, user: req.user.username, time: Date.now() };
+  const { symbol, qty, price } = req.body;
+
+  const validSymbol =
+    typeof symbol === 'string' && /^[a-zA-Z0-9._-]+$/.test(symbol);
+  const validQty = typeof qty === 'number' && !Number.isNaN(qty);
+  const validPrice = typeof price === 'number' && !Number.isNaN(price);
+
+  if (!validSymbol || !validQty || !validPrice) {
+    return res.status(400).json({ error: 'invalid trade fields' });
+  }
+
+  const trade = { symbol, qty, price, user: req.user.username, time: Date.now() };
   trades.push(trade);
   broadcast(JSON.stringify({ type: 'trade', data: trade }));
   res.status(201).json(trade);

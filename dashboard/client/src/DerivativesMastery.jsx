@@ -7,6 +7,7 @@ export default function DerivativesMastery() {
   const riskRef = useRef(null);
   const kpmRef = useRef(null);
   const payoffRef = useRef(null);
+  const improvementRef = useRef(null);
   const [strategy, setStrategy] = useState('bull-call');
   const charts = useRef({});
 
@@ -225,7 +226,22 @@ export default function DerivativesMastery() {
       }
     });
 
-    charts.current = { premiumChart, greeksChart, riskChart, kpmChart, payoffChart };
+    const improvementChart = new Chart(improvementRef.current, {
+      type: 'line',
+      data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        datasets: [{
+          label: 'Equity Curve',
+          data: [10000, 10200, 10150, 10500, 10750, 11000],
+          borderColor: palette.gold,
+          tension: 0.2,
+          fill: false
+        }]
+      },
+      options: { ...defaultChartOptions }
+    });
+
+    charts.current = { premiumChart, greeksChart, riskChart, kpmChart, payoffChart, improvementChart };
 
     return () => {
       Object.values(charts.current).forEach(c => c.destroy());
@@ -250,132 +266,201 @@ export default function DerivativesMastery() {
     </button>
   );
 
+  const sectionsMeta = [
+    { id: 'decoding-options', label: 'Decoding Options' },
+    { id: 'strategy-playbook', label: 'The Strategy Playbook' },
+    { id: 'risk-psychology', label: 'Risk & Psychology' },
+    { id: 'foundational-instruments', label: 'Foundational Instruments' },
+    { id: 'daily-trading-process', label: 'Daily Trading Process' },
+    { id: 'continuous-improvement', label: 'Continuous Improvement Loop' }
+  ];
+
+  const [activeSection, setActiveSection] = useState(sectionsMeta[0].id);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) setActiveSection(entry.target.id);
+        });
+      },
+      { rootMargin: '0px 0px -60% 0px' }
+    );
+
+    sectionsMeta.forEach(({ id }) => {
+      const el = document.getElementById(id);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const s = strategies[strategy];
+  const navItems = [
+    { id: 'foundational', label: 'Foundational Instruments' },
+    { id: 'process', label: 'Daily Trading Process' },
+    { id: 'improvement', label: 'Continuous Improvement Loop' }
+  ];
 
   return (
-    <div className="text-gray-800 bg-[#FDFBF7] font-inter">
-      <div className="text-center bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-10">
-        <h1 className="text-4xl md:text-5xl font-black text-[#2F2F2F] mb-4">The Derivatives Mastery Blueprint</h1>
-        <p className="text-lg text-gray-600 max-w-3xl mx-auto">An interactive application designed for educational purposes. This is not financial advice.</p>
-      </div>
+    <div className="text-gray-800 bg-[#FDFBF7] font-inter md:flex">
+      <nav className="md:w-1/4 md:pr-8 mb-8 md:mb-0 sticky top-4 self-start">
+        <ul className="flex md:flex-col gap-2 overflow-x-auto">
+          {sectionsMeta.map(({ id, label }) => (
+            <li key={id} className="shrink-0">
+              <a
+                href={`#${id}`}
+                className={`block px-4 py-2 bg-white rounded-lg border-l-4 hover:bg-gray-50 ${activeSection === id
+                    ? 'border-[#D5A021] font-bold text-[#2F2F2F]'
+                    : 'border-transparent text-gray-600'
+                  }`}
+              >
+                {label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+      <div className="flex-1">
+        <div className="text-center bg-white p-8 rounded-xl shadow-sm border border-gray-100 mb-10">
+          <h1 className="text-4xl md:text-5xl font-black text-[#2F2F2F] mb-4">The Derivatives Mastery Blueprint</h1>
+          <p className="text-lg text-gray-600 max-w-3xl mx-auto">An interactive application designed for educational purposes. This is not financial advice.</p>
+        </div>
 
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Decoding Options</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Anatomy of an Option Premium</h3>
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Decoding Options</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Anatomy of an Option Premium</h3>
+              <div className="chart-container h-72">
+                <canvas ref={premiumRef}></canvas>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">The Physics of Pricing: The Greeks</h3>
+              <div className="chart-container h-72">
+                <canvas ref={greeksRef}></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+        <section id="strategy-playbook" className="mb-16">
+          <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">The Strategy Playbook</h2>
+          <div className="flex flex-col md:flex-row gap-8">
+            <div className="w-full md:w-1/3 space-y-2" id="strategy-list">
+              <StrategyButton id="bull-call">
+                <h4 className="font-bold">Bull Call Spread</h4>
+                <p className="text-sm text-gray-500">Moderately Bullish</p>
+              </StrategyButton>
+              <StrategyButton id="bear-put">
+                <h4 className="font-bold">Bear Put Spread</h4>
+                <p className="text-sm text-gray-500">Moderately Bearish</p>
+              </StrategyButton>
+              <StrategyButton id="bull-put">
+                <h4 className="font-bold">Bull Put Spread</h4>
+                <p className="text-sm text-gray-500">Neutral to Bullish</p>
+              </StrategyButton>
+              <StrategyButton id="iron-condor">
+                <h4 className="font-bold">Iron Condor</h4>
+                <p className="text-sm text-gray-500">Low Volatility</p>
+              </StrategyButton>
+            </div>
+            <div className="w-full md:w-2/3 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-2xl font-bold text-[#2F2F2F] mb-2">{s.title}</h3>
+              <div className="text-gray-600 mb-4 text-sm space-y-3">{s.content}</div>
+              <div className="chart-container h-64">
+                <canvas ref={payoffRef}></canvas>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="risk-psychology" className="mb-16">
+          <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Risk &amp; Psychology</h2>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <div className="md:col-span-2 bg-red-600 text-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center">
+              <h3 className="text-2xl font-bold text-center">The 1% Rule</h3>
+              <p className="text-8xl font-black my-4 text-center">1%</p>
+              <p className="text-base text-center opacity-90">Never risk more than 1% of your trading capital on any single trade.</p>
+            </div>
+            <div className="md:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">The Power of Small Losses</h3>
+              <div className="chart-container h-64">
+                <canvas ref={riskRef}></canvas>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-6 mt-8 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-bold text-[#2F2F2F] mb-4 text-center">Performance Metrics</h3>
             <div className="chart-container h-72">
-              <canvas ref={premiumRef}></canvas>
+              <canvas ref={kpmRef}></canvas>
             </div>
           </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">The Physics of Pricing: The Greeks</h3>
-            <div className="chart-container h-72">
-              <canvas ref={greeksRef}></canvas>
+        </section>
+
+        <section id="foundational-instruments" className="mb-16">
+          <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Foundational Instruments</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Futures</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                <li>Standardized contracts on exchanges</li>
+                <li>Used to hedge price risk</li>
+                <li>Popular with speculators for leverage</li>
+              </ul>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Call Options</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                <li>Right but not obligation to buy</li>
+                <li>Strike price fixed until expiry</li>
+                <li>Great for bullish speculation</li>
+              </ul>
+            </div>
+            <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+              <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Put Options</h3>
+              <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+                <li>Right to sell the underlying</li>
+                <li>Insurance for long portfolios</li>
+                <li>Useful when market outlook is bearish</li>
+              </ul>
             </div>
           </div>
-        </div>
-      </section>
-
-
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">The Strategy Playbook</h2>
-        <div className="flex flex-col md:flex-row gap-8">
-          <div className="w-full md:w-1/3 space-y-2" id="strategy-list">
-            <StrategyButton id="bull-call">
-              <h4 className="font-bold">Bull Call Spread</h4>
-              <p className="text-sm text-gray-500">Moderately Bullish</p>
-            </StrategyButton>
-            <StrategyButton id="bear-put">
-              <h4 className="font-bold">Bear Put Spread</h4>
-              <p className="text-sm text-gray-500">Moderately Bearish</p>
-            </StrategyButton>
-            <StrategyButton id="bull-put">
-              <h4 className="font-bold">Bull Put Spread</h4>
-              <p className="text-sm text-gray-500">Neutral to Bullish</p>
-            </StrategyButton>
-            <StrategyButton id="iron-condor">
-              <h4 className="font-bold">Iron Condor</h4>
-              <p className="text-sm text-gray-500">Low Volatility</p>
-            </StrategyButton>
-          </div>
-          <div className="w-full md:w-2/3 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-2xl font-bold text-[#2F2F2F] mb-2">{s.title}</h3>
-            <div className="text-gray-600 mb-4 text-sm space-y-3">{s.content}</div>
-            <div className="chart-container h-64">
-              <canvas ref={payoffRef}></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Risk &amp; Psychology</h2>
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-          <div className="md:col-span-2 bg-red-600 text-white p-6 rounded-xl shadow-md flex flex-col justify-center items-center">
-            <h3 className="text-2xl font-bold text-center">The 1% Rule</h3>
-            <p className="text-8xl font-black my-4 text-center">1%</p>
-            <p className="text-base text-center opacity-90">Never risk more than 1% of your trading capital on any single trade.</p>
-          </div>
-          <div className="md:col-span-3 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">The Power of Small Losses</h3>
-            <div className="chart-container h-64">
-              <canvas ref={riskRef}></canvas>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-6 mt-8 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-xl font-bold text-[#2F2F2F] mb-4 text-center">Performance Metrics</h3>
-          <div className="chart-container h-72">
-            <canvas ref={kpmRef}></canvas>
-          </div>
-        </div>
-      </section>
-
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Foundational Instruments</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Futures</h3>
-            <p className="text-gray-600 text-sm">Standardized contracts to lock in prices for later delivery. Widely used for hedging and speculation.</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Call Options</h3>
-            <p className="text-gray-600 text-sm">Give the right, but not the obligation, to buy the underlying at a fixed price before expiry.</p>
-          </div>
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Put Options</h3>
-            <p className="text-gray-600 text-sm">Provide the right to sell the underlying at a predetermined price, useful for protection and bearish views.</p>
-          </div>
-        </div>
-        <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
-      </section>
-
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Daily Trading Process</h2>
-        <ol className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2 list-decimal list-inside text-sm text-gray-600">
-          <li>Pre-market preparation and news review.</li>
-          <li>Identify setups and define risk parameters.</li>
-          <li>Execute trades according to the plan.</li>
-          <li>Manage open positions and adjust stops.</li>
-          <li>Record outcomes and review the day.</li>
-        </ol>
-        <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
-      </section>
-
-      <section className="mb-16">
-        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Continuous Improvement Loop</h2>
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
-            <li>Maintain a detailed trading journal.</li>
-            <li>Analyze performance metrics regularly.</li>
-            <li>Identify areas of strength and weakness.</li>
-            <li>Refine rules and test incremental changes.</li>
-          </ul>
           <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
-        </div>
-      </section>
+        </section>
 
+        <section id="daily-trading-process" className="mb-16">
+          <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Daily Trading Process</h2>
+          <ol className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2 list-decimal list-inside text-sm text-gray-600">
+            <li>Pre-market scan of news and market sentiment.</li>
+            <li>Define setups, entry triggers and stop levels.</li>
+            <li>Execute according to the written plan.</li>
+            <li>Monitor positions and adjust risk.</li>
+            <li>Log trades with screenshots and notes.</li>
+            <li>End-of-day review of wins and losses.</li>
+          </ol>
+          <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
+        </section>
+
+        <section id="continuous-improvement" className="mb-16">
+          <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Continuous Improvement Loop</h2>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
+              <li>Maintain a detailed trading journal.</li>
+              <li>Analyze performance metrics regularly.</li>
+              <li>Identify areas of strength and weakness.</li>
+              <li>Refine rules and test incremental changes.</li>
+            </ul>
+            <div className="chart-container h-56 mt-4">
+              <canvas ref={improvementRef}></canvas>
+            </div>
+            <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
+          </div>
+        </section>
+
+      </div>
     </div>
   );
 }

@@ -277,6 +277,7 @@ export default function DerivativesMastery() {
         </div>
       </section>
 
+
       <section className="mb-16">
         <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">The Strategy Playbook</h2>
         <div className="flex flex-col md:flex-row gap-8">
@@ -330,6 +331,51 @@ export default function DerivativesMastery() {
           </div>
         </div>
       </section>
+
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Foundational Instruments</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Futures</h3>
+            <p className="text-gray-600 text-sm">Standardized contracts to lock in prices for later delivery. Widely used for hedging and speculation.</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Call Options</h3>
+            <p className="text-gray-600 text-sm">Give the right, but not the obligation, to buy the underlying at a fixed price before expiry.</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+            <h3 className="text-xl font-bold text-[#2F2F2F] mb-2">Put Options</h3>
+            <p className="text-gray-600 text-sm">Provide the right to sell the underlying at a predetermined price, useful for protection and bearish views.</p>
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
+      </section>
+
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Daily Trading Process</h2>
+        <ol className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-2 list-decimal list-inside text-sm text-gray-600">
+          <li>Pre-market preparation and news review.</li>
+          <li>Identify setups and define risk parameters.</li>
+          <li>Execute trades according to the plan.</li>
+          <li>Manage open positions and adjust stops.</li>
+          <li>Record outcomes and review the day.</li>
+        </ol>
+        <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
+      </section>
+
+      <section className="mb-16">
+        <h2 className="text-3xl font-bold text-[#2F2F2F] mb-2">Continuous Improvement Loop</h2>
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <ul className="list-disc list-inside space-y-2 text-sm text-gray-600">
+            <li>Maintain a detailed trading journal.</li>
+            <li>Analyze performance metrics regularly.</li>
+            <li>Identify areas of strength and weakness.</li>
+            <li>Refine rules and test incremental changes.</li>
+          </ul>
+          <p className="text-sm text-gray-500 text-center mt-4">This section is for educational purposes only and does not constitute financial advice.</p>
+        </div>
+      </section>
+
     </div>
   );
 }

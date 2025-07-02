@@ -25,3 +25,8 @@ python run_day_trading_agents.py
 This will execute the tasks sequentially and print the final simulated trading summary.
 
 The example simulates a trading workflow only and is not financial advice.
+
+## Dashboard
+
+A small dashboard in the `dashboard` folder demonstrates live trade updates and options concepts using Express and React. See [dashboard/README.md](dashboard/README.md) for setup details. All components are provided for educational purposes only.
+

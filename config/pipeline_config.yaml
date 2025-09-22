@@ -1,1 +1,163 @@
+# see README for context; this file declares tools, agents, and pipelines
+# Updated to latest FastMCP + Video Agent interfaces with step docs
 
+version: 1.0
+metadata:
+  name: video_processing_pipeline
+  docs:
+    flow_diagram: TBD
+  env:
+    required: [OPENAI_API_KEY, SERPER_API_KEY, STORAGE_BUCKET, TRANSIENT_DIR]
+
+tools:
+  - id: serper.search
+    type: http_api
+    inputs: { type: object, required: [query], properties: { query: {type: string}, num: {type: integer, default: 5} } }
+    outputs: { type: object, properties: { results: { type: array, items: { type: object } } } }
+  - id: storage.put
+    type: storage
+    inputs: { type: object, required: [path, content_b64, content_type], properties: { path: {type: string}, content_b64: {type: string}, content_type: {type: string} } }
+    outputs: { type: object, properties: { uri: { type: string } } }
+  - id: storage.get
+    type: storage
+    inputs: { type: object, required: [uri], properties: { uri: {type: string} } }
+    outputs: { type: object, properties: { content_b64: {type: string}, content_type: {type: string}, size_bytes: {type: integer} } }
+  - id: video.segmenter
+    type: python
+    inputs: { type: object, required: [video_uri], properties: { video_uri: {type: string}, strategy: {type: string, enum: [fixed_interval, shot_detect], default: shot_detect}, interval_sec: {type: number, default: 2.0} } }
+    outputs: { type: object, properties: { segments: { type: array, items: { type: object } } } }
+  - id: vision.caption
+    type: llm_vision
+    inputs: { type: object, required: [image_uris], properties: { image_uris: {type: array, items: {type: string}}, prompt: {type: string, default: "Provide concise, factual captions."} } }
+    outputs: { type: object, properties: { captions: { type: array, items: { type: object } } } }
+  - id: vision.ocr
+    type: python
+    inputs: { type: object, required: [image_uris], properties: { image_uris: {type: array, items: {type: string}}, lang: {type: string, default: eng} } }
+    outputs: { type: object, properties: { ocr: { type: array, items: { type: object } } } }
+  - id: vision.detect
+    type: python
+    inputs: { type: object, required: [image_uris], properties: { image_uris: {type: array, items: {type: string}}, model: {type: string, default: yolov8n}, conf_threshold: {type: number, default: 0.25} } }
+    outputs: { type: object, properties: { detections: { type: array, items: { type: object } } } }
+  - id: vision.embed
+    type: python
+    inputs: { type: object, required: [image_uris], properties: { image_uris: {type: array, items: {type: string}}, text: {type: array, items: {type: string}} } }
+    outputs: { type: object, properties: { embeddings: { type: array, items: { type: object } } } }
+  - id: index.upsert
+    type: vector_db
+    inputs: { type: object, required: [namespace, items], properties: { namespace: {type: string}, items: {type: array, items: {type: object}} } }
+    outputs: { type: object, properties: { upserted: { type: integer } } }
+  - id: index.query
+    type: vector_db
+    inputs: { type: object, required: [namespace, query_vector], properties: { namespace: {type: string}, query_vector: {type: array, items: {type: number}}, top_k: {type: integer, default: 5} } }
+    outputs: { type: object, properties: { matches: { type: array, items: { type: object } } } }
+
+agents:
+  - id: mcp.registry
+    role: FastMCP Tool Registry
+    tools: [serper.search, storage.put, storage.get, video.segmenter, vision.caption, vision.ocr, vision.detect, vision.embed, index.upsert, index.query]
+    inputs: { type: object, properties: { tool: {type: string}, args: {type: object} } }
+    outputs: { type: object, properties: { result: { type: object } } }
+  - id: agent.ingest
+    role: Video Ingestion Agent
+    tools: [storage.put]
+    inputs: { type: object, required: [video_b64, content_type, dst_path], properties: { video_b64: {type: string}, content_type: {type: string}, dst_path: {type: string} } }
+    outputs: { type: object, properties: { video_uri: { type: string } } }
+  - id: agent.segment
+    role: Video Segmentation Agent
+    tools: [video.segmenter]
+    inputs: { type: object, required: [video_uri], properties: { video_uri: {type: string}, strategy: {type: string}, interval_sec: {type: number} } }
+    outputs: { type: object, properties: { segments: { type: array } } }
+  - id: agent.perception
+    role: Visual Perception Agent
+    tools: [vision.caption, vision.ocr, vision.detect]
+    inputs: { type: object, required: [image_uris], properties: { image_uris: {type: array, items: {type: string}}, caption_prompt: {type: string}, ocr_lang: {type: string}, det_model: {type: string} } }
+    outputs: { type: object, properties: { captions: {type: array}, ocr: {type: array}, detections: {type: array} } }
+  - id: agent.indexer
+    role: Indexing Agent
+    tools: [vision.embed, index.upsert]
+    inputs: { type: object, required: [image_uris], properties: { image_uris: {type: array, items: {type: string}}, captions: {type: array, items: {type: string}}, namespace: {type: string, default: videos} } }
+    outputs: { type: object, properties: { upserted: { type: integer } } }
+  - id: agent.search
+    role: Semantic Search Agent
+    tools: [vision.embed, index.query]
+    inputs: { type: object, required: [query], properties: { query: {type: string}, namespace: {type: string, default: videos}, top_k: {type: integer, default: 5} } }
+    outputs: { type: object, properties: { matches: { type: array } } }
+  - id: agent.webresearch
+    role: Web Research Agent
+    tools: [serper.search]
+    inputs: { type: object, required: [topic], properties: { topic: {type: string}, num: {type: integer, default: 5} } }
+    outputs: { type: object, properties: { results: { type: array } } }
+
+pipelines:
+  - id: pipeline.video_ingest_to_index
+    summary: Ingest video -> segment -> perceive -> index
+    inputs:
+      type: object
+      required: [video_b64, content_type, dst_path]
+      properties:
+        video_b64: { type: string }
+        content_type: { type: string }
+        dst_path: { type: string }
+        segmentation: { type: object, properties: { strategy: {type: string}, interval_sec: {type: number} } }
+        perception: { type: object, properties: { caption_prompt: {type: string}, ocr_lang: {type: string}, det_model: {type: string} } }
+        index: { type: object, properties: { namespace: {type: string, default: videos} } }
+    outputs: { type: object, properties: { video_uri: {type: string}, segments: {type: array}, upserted: {type: integer} } }
+    steps:
+      - id: s1_ingest
+        agent: agent.ingest
+        with: { video_b64: $.video_b64, content_type: $.content_type, dst_path: $.dst_path }
+      - id: s2_segment
+        agent: agent.segment
+        with: { video_uri: $.s1_ingest.video_uri, strategy: $.segmentation.strategy, interval_sec: $.segmentation.interval_sec }
+      - id: s3_perception
+        agent: agent.perception
+        with: { image_uris: $.s2_segment.segments[*].keyframe_uri, caption_prompt: $.perception.caption_prompt, ocr_lang: $.perception.ocr_lang, det_model: $.perception.det_model }
+      - id: s4_index
+        agent: agent.indexer
+        with: { image_uris: $.s2_segment.segments[*].keyframe_uri, captions: $.s3_perception.captions[*].text, namespace: $.index.namespace }
+    returns: { video_uri: $.s1_ingest.video_uri, segments: $.s2_segment.segments, upserted: $.s4_index.upserted }
+
+  - id: pipeline.semantic_search
+    summary: Text-to-frame semantic search
+    inputs: { type: object, required: [query], properties: { query: {type: string}, namespace: {type: string, default: videos}, top_k: {type: integer, default: 5} } }
+    outputs: { type: object, properties: { matches: { type: array } } }
+    steps:
+      - id: e1_embed
+        agent: agent.search
+        with: { query: $.query, namespace: $.namespace, top_k: $.top_k }
+    returns: { matches: $.e1_embed.matches }
+
+  - id: pipeline.web_enriched_index
+    summary: Add web research context while indexing
+    inputs: { type: object, required: [video_b64, content_type, dst_path, topic], properties: { video_b64: {type: string}, content_type: {type: string}, dst_path: {type: string}, topic: {type: string}, segmentation: {type: object}, index: {type: object} } }
+    outputs: { type: object, properties: { video_uri: {type: string}, upserted: {type: integer}, web_context: {type: array} } }
+    steps:
+      - id: w1_ingest_and_index
+        pipeline: pipeline.video_ingest_to_index
+        with: { video_b64: $.video_b64, content_type: $.content_type, dst_path: $.dst_path, segmentation: $.segmentation, index: $.index }
+      - id: w2_web_research
+        agent: agent.webresearch
+        with: { topic: $.topic, num: 5 }
+    returns: { video_uri: $.w1_ingest_and_index.video_uri, upserted: $.w1_ingest_and_index.upserted, web_context: $.w2_web_research.results }
+
+# Step-by-step documentation for flows (text only)
+flows:
+  - id: flow_ingest_to_index
+    title: Ingest -> Segment -> Perceive -> Index
+    steps:
+      - Receive base64 video payload and metadata
+      - Store to object storage (storage.put) -> video_uri
+      - Segment video and extract keyframes (video.segmenter)
+      - Perception on keyframes: caption, OCR, detect
+      - Embed frames/captions and upsert to vector index
+  - id: flow_semantic_search
+    title: Text-to-frame search
+    steps:
+      - Embed text query
+      - Query vector DB for nearest frames
+  - id: flow_web_enriched_index
+    title: Web-enriched indexing
+    steps:
+      - Run ingest_to_index pipeline
+      - Research topic via Serper
+      - Attach research excerpts to index metadata

@@ -1,32 +1,175 @@
-# explore_agent
+# explore_agents
 
-Exploring agents with Agno and Crew AI
+A modular FastMCP + Video Agent pipeline demonstrating multimodal processing, semantic search, and web-enriched indexing.
 
-## Day Trading Example
+- Repo status: active; legacy day trading code preserved under `legacy/`.
+- Key files:
+  - `config/pipeline_config.yaml` — tools, agents, pipelines, and flow docs
+  - `agent_config.yaml` — legacy agent examples
+  - `Dockerfile` — containerized runtime for pipeline and dashboard
 
-This repository now includes a simple example of building a multi-agent crew for day trading research and planning. The configuration lives in `day_trading_config.yaml` and defines:
+## Why this project
+Fast iteration on video understanding stacks requires clear contracts between tools, agents, and pipelines. This repo provides:
+- Explicit tool/agent I/O schemas
+- Reusable pipelines (ingest → segment → perceive → index → search)
+- Web research enrichment (Serper) and vector search
+- Production-ready Dockerfile and examples
 
-- A search agent that gathers information from Crewai documentation and SEBI regulations.
-- ReAct, planning and reflective agents that analyze the results and develop a strategy.
-- A day trading agent that performs paper trading using the generated plan.
+---
+## Installation
 
-Before running the example, set your Serper API key so the search agent can query the web:
+Prerequisites:
+- Python 3.10+
+- Node 18+ (for dashboard)
+- Docker (optional but recommended)
 
+Environment variables:
+- OPENAI_API_KEY (for vision LLM if used)
+- SERPER_API_KEY (for web search)
+- STORAGE_BUCKET (e.g., s3://my-bucket or file:// for local)
+- TRANSIENT_DIR (local tmp directory)
+
+Install Python dependencies:
 ```bash
-export SERPER_API_KEY=your_serper_api_key
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-Run the crew with:
-
+Dashboard (optional):
 ```bash
-python run_day_trading_agents.py
+npm install --prefix dashboard
+npm run build --prefix dashboard
 ```
 
-This will execute the tasks sequentially and print the final simulated trading summary.
+---
+## Quickstart
 
-The example simulates a trading workflow only and is not financial advice.
+1) Configure pipeline
+- Open `config/pipeline_config.yaml` and review tools/agents
 
-## Dashboard
+2) Run ingestion→indexing (example pseudo-runner):
+```python
+# examples/run_ingest_index.py
+import base64, json
+from pathlib import Path
+from pipeline import run_pipeline  # your orchestrator loader
 
-A small dashboard in the `dashboard` folder demonstrates live trade updates and options concepts using Express and React. Styling relies on Tailwind CSS compiled with PostCSS. See [dashboard/README.md](dashboard/README.md) for setup details and the CSS build configuration. All components are provided for educational purposes only.
+video_b64 = base64.b64encode(Path('sample.mp4').read_bytes()).decode()
+inputs = {
+  'video_b64': video_b64,
+  'content_type': 'video/mp4',
+  'dst_path': 'videos/sample.mp4',
+  'segmentation': {'strategy': 'shot_detect', 'interval_sec': 2.0},
+  'perception': {'caption_prompt': 'Concise, factual captions.'},
+  'index': {'namespace': 'videos'}
+}
+print(json.dumps(run_pipeline('pipeline.video_ingest_to_index', inputs), indent=2))
+```
 
+3) Query semantic search:
+```python
+from pipeline import run_pipeline
+print(run_pipeline('pipeline.semantic_search', {
+  'query': 'person speaking at whiteboard',
+  'namespace': 'videos',
+  'top_k': 5
+}))
+```
+
+---
+## Architecture
+
+The system consists of FastMCP tools, specialized agents, and composed pipelines:
+- Tools: stateless capabilities (storage, video segmentation, OCR/detection/captioning, embeddings, vector index, web search)
+- Agents: orchestrate tools with validated inputs/outputs
+- Pipelines: chain agents into end-to-end flows
+
+Textual flow diagram (data and control lines):
+- Client → agent.ingest → storage.put → video_uri
+- agent.segment(video_uri) → segments[keyframe_uri]
+- agent.perception(keyframes)
+  - vision.caption → captions
+  - vision.ocr → text
+  - vision.detect → boxes
+- agent.indexer
+  - vision.embed(keyframes/captions) → vectors
+  - index.upsert(namespace, vector, metadata)
+- agent.search (text query)
+  - vision.embed(query) → query_vector
+  - index.query(query_vector, top_k) → matches
+- Optional enrichment: agent.webresearch(topic) → results
+
+See full configuration with JSON Schemas in `config/pipeline_config.yaml`.
+
+---
+## Usage Details
+
+CLI example (pseudo):
+```bash
+python -m pipelines.run --pipeline pipeline.video_ingest_to_index \
+  --video sample.mp4 --dst videos/sample.mp4 \
+  --strategy shot_detect --interval 2.0
+```
+
+API example (FastAPI-style):
+```python
+@app.post('/ingest')
+def ingest(req: IngestRequest):
+    return run_pipeline('pipeline.video_ingest_to_index', req.dict())
+```
+
+Outputs include:
+- video_uri: persistent location of uploaded video
+- segments: timing and keyframe URIs
+- upserted: count of index records
+
+---
+## FastMCP Integration
+
+- Tools are declared with explicit JSON Schemas (inputs/outputs)
+- Agents reference tools and validate payloads
+- Pipelines map step outputs to inputs using JSONPath-like references (e.g., `$.s1_ingest.video_uri`)
+
+Code/config examples live in `config/pipeline_config.yaml`.
+
+---
+## Video Agent Stack
+
+- Segmenter: fixed interval or shot detection with keyframe extraction
+- Perception: captioning (vision LLM), OCR, detection (YOLO)
+- Embedding: CLIP-style embeddings supporting image+text
+- Index: vector database with metadata
+- Search: text or image query → nearest frames
+
+Tuning tips:
+- Increase segment interval for long videos
+- Use higher YOLO model size for accuracy (`yolov8m/yolov8l`)
+- Store both frame and caption embeddings for better recall
+
+---
+## Docker
+
+Build:
+```bash
+docker build -t explore-agents:latest .
+```
+Run:
+```bash
+docker run --rm -p 8000:8000 \
+  -e OPENAI_API_KEY=$OPENAI_API_KEY \
+  -e SERPER_API_KEY=$SERPER_API_KEY \
+  -e STORAGE_BUCKET=file:///data \
+  -e TRANSIENT_DIR=/tmp \
+  -v $(pwd)/data:/data \
+  explore-agents:latest
+```
+
+---
+## Legacy Day Trading
+
+Legacy day trading agents are preserved under `legacy/` and are no longer maintained.
+
+---
+## License
+
+MIT — see LICENSE.

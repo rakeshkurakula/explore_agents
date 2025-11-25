@@ -2,11 +2,10 @@
 
 A modular FastMCP + Video Agent pipeline demonstrating multimodal processing, semantic search, and web-enriched indexing.
 
-- Repo status: active; legacy day trading code preserved under `legacy/`.
 - Key files:
   - `config/pipeline_config.yaml` — tools, agents, pipelines, and flow docs
-  - `agent_config.yaml` — legacy agent examples
-  - `Dockerfile` — containerized runtime for pipeline and dashboard
+  - `agent_config.yaml` — agent role/task examples for research/summarization
+  - `notebooks/` — exploratory notebooks for agents and tools
 
 ## Why this project
 Fast iteration on video understanding stacks requires clear contracts between tools, agents, and pipelines. This repo provides:
@@ -20,8 +19,6 @@ Fast iteration on video understanding stacks requires clear contracts between to
 
 Prerequisites:
 - Python 3.10+
-- Node 18+ (for dashboard)
-- Docker (optional but recommended)
 
 Environment variables:
 - OPENAI_API_KEY (for vision LLM if used)
@@ -33,12 +30,6 @@ Install Python dependencies:
 ```bash
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-```
-
-Dashboard (optional):
-```bash
-npm install --prefix dashboard
-npm run build --prefix dashboard
 ```
 
 ---
@@ -145,29 +136,6 @@ Tuning tips:
 - Increase segment interval for long videos
 - Use higher YOLO model size for accuracy (`yolov8m/yolov8l`)
 - Store both frame and caption embeddings for better recall
-
----
-## Docker
-
-Build:
-```bash
-docker build -t explore-agents:latest .
-```
-Run:
-```bash
-docker run --rm -p 8000:8000 \
-  -e OPENAI_API_KEY=$OPENAI_API_KEY \
-  -e SERPER_API_KEY=$SERPER_API_KEY \
-  -e STORAGE_BUCKET=file:///data \
-  -e TRANSIENT_DIR=/tmp \
-  -v $(pwd)/data:/data \
-  explore-agents:latest
-```
-
----
-## Legacy Day Trading
-
-Legacy day trading agents are preserved under `legacy/` and are no longer maintained.
 
 ---
 ## License

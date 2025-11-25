@@ -23,9 +23,10 @@
 
 ## Minimal Driver (starting point)
 1) Install deps: `python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt`.
-2) Write a driver that loads `config/pipeline_config.yaml`, runs one pipeline with small/synthetic media, and emits a trace log + JSON result.
-3) Add validation wrappers around tool inputs/outputs and log any coercions or drops.
-4) Wire the driver into `pytest` for smoke tests; fail fast on missing fields or unexpected routing.
+2) Use `driver.py` for dry runs and tracing: `python driver.py --pipeline pipeline.video_ingest_to_index --dry-run` (uses sample payloads; writes JSONL traces to `traces/`).
+3) Provide a JSON payload file for real validation: `python driver.py --pipeline pipeline.semantic_search --payload payload.json --dry-run`.
+4) Wire live execution by adding an executor to `PipelineDriver.run` and feeding resolved inputs per step; keep tracing on.
+5) Hook the driver into `pytest` for smoke tests; fail fast on schema issues or unexpected routing.
 
 ## Documentation & Reuse
 - Keep code pointers and example traces here and in `AGENTS.md`; update when tool contracts or prompts change.

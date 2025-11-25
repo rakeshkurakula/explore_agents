@@ -32,6 +32,11 @@ python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
+Dry-run validator + trace logger:
+```bash
+python driver.py --pipeline pipeline.video_ingest_to_index --dry-run
+```
+
 ---
 ## Quickstart
 

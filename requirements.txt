@@ -22,6 +22,8 @@ jedi==0.19.1
 Jinja2==2.11.2
 jupyter_client==8.6.0
 jupyter_core==5.5.0
+jsonpath-ng==1.6.1
+jsonschema==4.23.0
 MarkupSafe==1.1.1
 matplotlib-inline==0.1.6
 mendel-development-tool==1.5.2
